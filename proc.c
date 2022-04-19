@@ -202,6 +202,13 @@ fork(void)
   np->parent = curproc;
   *np->tf = *curproc->tf;
 
+  // Copy protected bits
+  for(int i = curproc->vbase; i < curproc->vlimit; i += PGSIZE) {
+      if(!(curproc->pgdir[i] & PTE_W)) {
+          np->pgdir[i] &= ~PTE_W;
+      }
+  }
+
   // Clear %eax so that fork returns 0 in the child.
   np->tf->eax = 0;
 
