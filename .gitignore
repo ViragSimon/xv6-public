@@ -16,3 +16,4 @@ mkfs
 .gdbinit
 *.map
 check-repo-is-submissible.sh
+.idea
