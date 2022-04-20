@@ -7,6 +7,7 @@
 #include "proc.h"
 #include "spinlock.h"
 
+
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
@@ -207,6 +208,7 @@ fork(void)
       if(!(curproc->pgdir[i] & PTE_W)) {
           np->pgdir[i] &= ~PTE_W;
       }
+
   }
 
   // Clear %eax so that fork returns 0 in the child.

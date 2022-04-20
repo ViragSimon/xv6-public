@@ -382,86 +382,73 @@ copyout(pde_t *pgdir, uint va, void *p, uint len) {
 int mprotect(void *addr, int len) {
     struct proc *curproc = myproc();
 
-    // if addr is not page aligned
+
+    // Check if addr is not page aligned
     if (((uint) addr % PGSIZE) != 0) {
         cprintf("mprotect: addr not page aligned\n");
         return -1;
     }
 
-    //addr points to a region that is not currently a part of the address space
-    if((uint) addr + len * PGSIZE > curproc->vlimit ) {
-        cprintf("mprotect: addr not in address space\n");
-        return -1;
-    }
 
-
-    if((uint) addr + len * PGSIZE < curproc->vbase ) {
-        cprintf("mprotect: addr not in address space\n");
-        return -1;
-    }
-
-    // len is incorrect
+    //Check if len is incorrect
     if (len <= 0) {
         cprintf("mprotect: len is incorrect\n");
         return -1;
     }
 
-
+    pte_t *pte;
     for (uint i = (uint) addr; i < (uint) addr + len * PGSIZE; i += PGSIZE) {
-        pte_t *pte = walkpgdir(curproc->pgdir, (void *) i, 0);
+         pte = walkpgdir(curproc->pgdir, (void *) i, 0);
+
+         //Check if pte is not present
         if (!pte) {
-            cprintf("PTE is null\n");
+            cprintf("mprrotect: PTE is null\n");
             return -1;
         }
+        //Clear the write bit in the PTE
         *pte &= ~PTE_W;
 
     }
 
-
+    //flush TLB
     lcr3(V2P(curproc->pgdir));
 
     return 0;
 }
 
-
+//does the opposite of mprotect, sets the region back to both readable and writeable.
 int munprotect(void *addr, int len){
     struct proc *curproc = myproc();
 
-    // if addr is not page aligned
+
+    // Check if addr is not page aligned
     if (((uint) addr % PGSIZE) != 0) {
         cprintf("mprotect: addr not page aligned\n");
         return -1;
     }
 
-    //addr points to a region that is not currently a part of the address space
-    if((uint) addr + len * PGSIZE > curproc->vlimit ) {
-        cprintf("mprotect: addr not in address space\n");
-        return -1;
-    }
 
-    //
-    if((uint) addr + len * PGSIZE < curproc->vbase ) {
-        cprintf("mprotect: addr not in address space\n");
-        return -1;
-    }
-
-    // len is incorrect
+    //Check if len is incorrect
     if (len <= 0) {
         cprintf("mprotect: len is incorrect\n");
         return -1;
     }
 
-
+    pte_t *pte;
     for (uint i = (uint) addr; i < (uint) addr + len * PGSIZE; i += PGSIZE) {
-        pte_t *pte = walkpgdir(curproc->pgdir, (void *) i, 0);
+        pte = walkpgdir(curproc->pgdir, (void *) i, 0);
+
+        //Check if pte is not present
         if (!pte) {
-            cprintf("PTE is null\n");
+            cprintf("mprrotect: PTE is null\n");
             return -1;
         }
+        //Add the write bit in the PTE
         *pte |= PTE_W;
 
     }
 
+    //flush TLB
     lcr3(V2P(curproc->pgdir));
 
     return 0;
